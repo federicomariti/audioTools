@@ -1,0 +1,85 @@
+package mariti.audio.iad.gui;
+
+import java.io.File;
+
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+
+import javax.swing.SwingUtilities;
+import javax.swing.JPanel;
+import javax.swing.JFrame;
+import javax.swing.JTabbedPane;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
+public class GUI {
+    public static void main(String[] args) {
+	SwingUtilities.invokeLater(new Runnable() {
+		public void run() {
+		    createAndShowGui();
+		}
+	    });
+    }
+
+    private static void createAndShowGui() {
+	JFrame frame = new JFrame("Audio Processing Tools");
+	JPanel panel = new JPanel();
+	BoxLayout boxly = new BoxLayout(panel, BoxLayout.Y_AXIS);
+
+	final byte[] map = null;
+	AudioFormat af = null;
+
+	JButton writeButton = new JButton("Write");
+
+	final InputFileGui inputfile = new InputFileGui("Audio input file");
+	final OutputFileGui outputfile = new OutputFileGui("Audio output file");
+
+	VolumeGUI volume = new VolumeGUI();
+	PeakNormalizationGUI peakNormalizer = new PeakNormalizationGUI();
+	FIRGUI fir = new FIRGUI();
+	//LowPassFilter lowpass = new LowPassFilter();
+
+	final JTabbedPane tabbedpane = new JTabbedPane();
+	tabbedpane.add("Volume", volume);
+	tabbedpane.add("PeakNormalizer", peakNormalizer);
+	tabbedpane.add("FIR", fir);
+
+	writeButton.addActionListener(new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+		    System.out.println("Input File is " +
+				       inputfile.getSelectedFile() + "\n" +
+				       "Output File is " +
+				       outputfile.getSelectedFile() + "\n" + 
+				       "Selected Module is " +
+				       tabbedpane.getSelectedComponent());
+		    TabElement module =
+			(TabElement)tabbedpane.getSelectedComponent();
+		    File inFile = inputfile.getSelectedFile();
+		    AudioInputStream ais = null;
+		    try {
+			ais = AudioSystem.getAudioInputStream(inFile);
+		    } catch(Exception ex) { ex.printStackTrace(); }
+		    module.setAudioFormat(ais.getFormat());
+		    //map file in memory
+		    if (map == null || map.length < ais.available())
+			map = new byte[ais.available()];
+		    //execute module.filter(map, 0, map.length)
+		    //write out to outfile
+		}
+	    });
+
+	panel.setLayout(boxly);
+	panel.add(inputfile);
+	panel.add(tabbedpane);
+	panel.add(outputfile);
+	panel.add(writeButton);
+	frame.getContentPane().add(panel);
+	frame.pack();
+	frame.setVisible(true);
+    }
+
+}

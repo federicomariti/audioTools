@@ -1,0 +1,64 @@
+package mariti.audio.iad.gui;
+
+import mariti.audio.iad.Volume;
+
+import javax.sound.sampled.AudioFormat;
+
+import javax.swing.JPanel;
+import javax.swing.JLabel;
+import javax.swing.JSlider;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.BoxLayout;
+
+//implementa le funzionalita` di un modulo quali filter,
+//getAudioFormat, setAudioFormat tali funzionalita` sono definite
+//nell'interfaccia TabElement (che estende Module). Ogni modulo
+//grafico (elemento del tabbed) deve implementare tale interfaccia
+//coprendo il modulo effettivo annidato nella classe.
+
+public class VolumeGUI extends JPanel implements ChangeListener, TabElement {
+    private JSlider volumeSlider;
+    private JLabel volumeLabel;
+
+    private Volume volume;
+
+    public VolumeGUI() {
+	this(new Volume());
+    }
+
+    public VolumeGUI(Volume volume) {
+	BoxLayout boxly = new BoxLayout(this, BoxLayout.X_AXIS);
+	//setLayout(boxly);
+
+	this.volume = volume;
+
+	volumeLabel = new JLabel("100");
+
+	volumeSlider = new JSlider(0, 100, 100);
+	volumeSlider.setMajorTickSpacing(25);
+	volumeSlider.setPaintTicks(true);
+	volumeSlider.addChangeListener(this);
+
+	add(volumeSlider);
+	add(volumeLabel);
+    }
+
+    public void stateChanged(ChangeEvent e) {
+	String preStr = " ";
+	int value = volumeSlider.getValue();
+	if (volumeSlider.getValue() == 100) preStr = "";
+	volumeLabel.setText(preStr + String.valueOf(value));
+	volume.setVolume(value / 100F);
+    }
+
+    public void filter(byte[] data, int off, int len) {
+	volume.filter(data, off, len);
+    }
+    public AudioFormat getAudioFormat() {
+	return volume.getAudioFormat();
+    }
+    public void setAudioFormat(AudioFormat af) {
+	volume.setAudioFormat(af);
+    }
+}

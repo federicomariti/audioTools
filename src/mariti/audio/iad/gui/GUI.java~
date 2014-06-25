@@ -1,0 +1,123 @@
+package mariti.audio.iad.gui;
+
+import java.io.File;
+import java.io.ByteArrayInputStream;
+
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.AudioFileFormat;
+import javax.swing.SwingUtilities;
+import javax.swing.JPanel;
+import javax.swing.JFrame;
+import javax.swing.JTabbedPane;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
+public class GUI extends JPanel implements ActionListener {
+    private byte[] map = null;
+    private JButton writeButton = new JButton("Write");
+    private InputFileGui inputfile = new InputFileGui("Audio input file");
+    private OutputFileGui outputfile = new OutputFileGui("Audio output file");
+    private JButton asTheInputButton = new JButton("As the input file");
+    private JTabbedPane tabbedpane = new JTabbedPane();
+    
+    public GUI() {
+	BoxLayout boxly = new BoxLayout(this, BoxLayout.Y_AXIS);
+	JPanel outputFilePanel = new JPanel();
+	outputFilePanel.add(outputfile);
+	outputFilePanel.add(asTheInputButton);
+	
+	VolumeGUI volume = new VolumeGUI();
+	PeakNormalizationGUI peakNormalizer = new PeakNormalizationGUI();
+	FIRGUI fir = new FIRGUI();
+	//LowPassFilter lowPass = new LowPassFilter();
+
+	tabbedpane.add("Volume", volume);
+	tabbedpane.add("Peak Normalizer", peakNormalizer);
+	tabbedpane.add("FIR", fir);
+	//tabbedpane.add("Low Pass Filter", lowPass);
+
+	writeButton.addActionListener(this);
+	asTheInputButton.addActionListener(this);
+
+	setLayout(boxly);
+	add(inputfile);
+	add(tabbedpane);
+	add(outputFilePanel);
+	add(writeButton);
+	
+    }
+
+    public static void main(String[] args) {
+	SwingUtilities.invokeLater(new Runnable() {
+		public void run() {
+		    createAndShowGui();
+		}
+	    });
+    }
+
+    private static void createAndShowGui() {
+	JFrame frame = new JFrame("Audio Processing Tools");
+	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+	frame.getContentPane().add(new GUI());
+	frame.pack();
+	frame.setVisible(true);
+    }
+
+
+    public void actionPerformed(ActionEvent e) {
+	if (e.getSource() == writeButton) {
+	    // System.out.println("Input File is " +
+	    // 		       inputfile.getSelectedFile() + "\n" +
+	    // 		       "Output File is " +
+	    // 		       outputfile.getSelectedFile() + "\n" + 
+	    // 		       "Selected Module is " +
+	    // 		       tabbedpane.getSelectedComponent());
+	    if (null == inputfile || null == outputfile)
+		return ;
+	    try {
+		//parse information from others graphical component
+		TabElement module = (TabElement)tabbedpane.getSelectedComponent();
+		File inFile = inputfile.getSelectedFile();
+		AudioFileFormat inFileFormat = AudioSystem.getAudioFileFormat(inFile);
+		AudioFormat af = inFileFormat.getFormat();
+		File outFile = outputfile.getSelectedFile();
+		//get AudioInputStream from the input file
+		AudioInputStream ais = null;
+		try {
+		    ais = AudioSystem.getAudioInputStream(inFile);
+		} catch(Exception ex) { ex.printStackTrace(); }
+		module.setAudioFormat(ais.getFormat());
+		//map file in memory
+		int size = ais.available();
+		System.out.println(inFile.getName() + "  " + size);
+		if (map == null || map.length < size)
+		    map = new byte[size];
+		ais.read(map, 0, size);
+		//execute the module filter
+		module.setAudioFormat(af);
+		module.filter(map, 0, size);
+		//write the result to the output file
+		//ais = AudioSystem.getAudioInputStream(new ByteArrayInputStream(map));
+		ais = new AudioInputStream(new ByteArrayInputStream(map), af, size);
+		AudioFileFormat.Type fileType = inFileFormat.getType();
+		if (AudioSystem.isFileTypeSupported(fileType, ais)) {
+		    AudioSystem.write(ais, fileType, outFile);
+		} else {
+		    System.err.println("File Type is not supported for writing");
+		}
+		ais.close();
+	    } catch(Exception ex) {
+		System.err.println(ex.getMessage());
+		//ex.printStackTrace();
+	    }
+	} else if (e.getSource() == asTheInputButton) {
+	    outputfile.setFile(inputfile.getSelectedFile());
+	}
+    }
+}

@@ -1,0 +1,9 @@
+package mariti.audio.iad.gui;
+
+public class OutputFileGui extends SelectFileGui {
+
+    public void actionPerformed(ActionEvent e) {
+	super(e);
+    }
+
+}

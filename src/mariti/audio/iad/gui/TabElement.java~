@@ -1,0 +1,4 @@
+package mariti.audio.iad;
+
+public interface TabElement extends Module {
+}

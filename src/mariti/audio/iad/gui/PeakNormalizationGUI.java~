@@ -1,0 +1,39 @@
+package mariti.audio.iad.gui;
+
+import mariti.audio.iad.PeakNormalization;
+
+import javax.sound.sampled.AudioFormat;
+
+import javax.swing.JPanel;
+import javax.swing.JComboBox;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
+public class PeakNormalizationGUI extends JPanel implements ActionListener, TabElement {
+    private JComboBox combo;
+    private PeakNormalization normalizer;
+
+    public PeakNormalizationGUI () {
+	Integer[] values = { 100, 98 };
+	combo = new JComboBox(values);
+	normalizer = new PeakNormalization();
+	combo.addActionListener(this);
+	add(combo);
+    }
+
+    public void actionPerformed(ActionEvent e) {
+	Integer i = (Integer)combo.getSelectedItem();
+	normalizer.setPeak(i);
+    }
+
+    public void filter(byte[] data, int off, int len) {
+	normalizer.filter(data, off, len);
+    }
+    public AudioFormat getAudioFormat() {
+	return normalizer.getAudioFormat();
+    }
+    public void setAudioFormat(AudioFormat af) {
+	normalizer.setAudioFormat(af);
+    }
+}

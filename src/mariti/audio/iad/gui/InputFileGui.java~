@@ -1,0 +1,12 @@
+package mariti.audio.iad.gui;
+
+public class InputFileGui extends JPanel {
+    private JButton openButton;
+    private JButton searchButton;
+
+    private JTextField text;
+    private JFileChooser fileChooser;
+    public InputFileGui() {
+	
+    }
+}

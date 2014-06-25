@@ -1,0 +1,72 @@
+package mariti.audio.iad.gui;
+import java.util.Arrays;
+
+import mariti.audio.iad.FIR;
+
+import javax.sound.sampled.AudioFormat;
+
+import javax.swing.JPanel;
+import javax.swing.JButton;
+import javax.swing.JTextField;
+import javax.swing.JPanel;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.awt.GridLayout;
+
+import java.util.Scanner;
+import java.util.ArrayDeque;
+import java.io.File;
+
+public class FIRGUI extends JPanel implements ActionListener, TabElement {
+    private JButton parseButton;
+    private SelectFileGui selectFile;
+    private FIR fir; 
+
+    public FIRGUI() {
+	fir = new FIR();
+	selectFile = new SelectFileGui("Coefficients file");
+	parseButton = new JButton("Parse file");
+	parseButton.addActionListener(this);
+	add(selectFile);
+	add(parseButton);
+    }
+
+    public void actionPerformed(ActionEvent e) {
+	if (e.getSource() == parseButton) {
+	    //TODO: parse file and shows coefficients in text fileds
+	    File file = selectFile.getSelectedFile();
+	    try {
+		Scanner scanner = new Scanner(file);
+		//scanner.useDelimiter("\\p{Punct}+\\p{javaWhitespace}+");
+		//scanner.useDelimiter("\\p{Punct}+\\p{javaWhitespace}+");
+		ArrayDeque<Float> stack = new ArrayDeque<Float>();
+		while(scanner.hasNextFloat())
+		    stack.push(scanner.nextFloat());
+		int size = stack.size();
+		System.out.println(stack);
+		Float[] array = stack.toArray(new Float[size]);
+		System.out.println(Arrays.toString(array));
+		GridLayout gridly = new GridLayout(size/5, 5);
+		JPanel panel = new JPanel();
+		panel.setLayout(gridly);
+		for (int i=0; i<size; i++)
+		    panel.add(new JTextField(String.valueOf(stack.pop())));
+		add(panel);
+	    } catch(Exception ex) {
+		System.err.println(ex.getMessage());
+		ex.printStackTrace();
+	    }
+	}
+    }
+
+    public void filter(byte[] data, int off, int len) {
+	fir.filter(data, off, len);
+    }
+    public AudioFormat getAudioFormat() {
+	return fir.getAudioFormat();
+    }
+    public void setAudioFormat(AudioFormat af) {
+	fir.setAudioFormat(af);
+    }
+}
